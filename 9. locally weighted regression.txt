@@ -1,0 +1,30 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def kernel(point, xmat, k):
+    weights = np.exp(np.sum((point - xmat)**2, axis=1) / (-2.0 * k**2))
+    return np.diag(weights)
+
+def localWeight(point, xmat, ymat, k):
+    wei = kernel(point, xmat, k)
+    W = np.linalg.inv(xmat.T @ wei @ xmat) @ xmat.T @ wei @ ymat.T
+    return W
+
+def localWeightRegression(xmat, ymat, k):
+    ypred = np.array([xmat[i] @ localWeight(xmat[i], xmat, ymat, k) for i in range(len(xmat))])
+    return ypred
+
+data = pd.read_csv("D:\Data9.csv")
+X = np.column_stack((np.ones(len(data)), data.colA))
+y = np.array(data.colB)
+
+ypred = localWeightRegression(X, y, 0.5)
+SortIndex = X[:, 1].argsort()
+xsort = X[SortIndex]
+
+fig, ax = plt.subplots()
+ax.scatter(data.colA, data.colB, color='green')
+ax.plot(xsort[:, 1], ypred[SortIndex], color='red', linewidth=5)
+ax.set(xlabel='colA', ylabel='colB')
+plt.show()
